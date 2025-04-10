@@ -60,6 +60,11 @@ def login_to_page(session:requests.Session, login_url, loginCredentials:LoginCre
     return post_response
 
 
+def is_login_page(input:str) -> bool:
+    soup = BeautifulSoup(input, 'html.parser')
+    return soup.find('input', {'name': 'userPass:agentId'}) is not None
+
+
 if __name__ == "__main__":
     LOGIN_URL = "LOGIN_URL_TO_DNSBELGIUM_REGISTRAR_PORTAL"
     CREDENTIALS = LoginCredentials(
@@ -69,7 +74,6 @@ if __name__ == "__main__":
         otp_secret="UPDATE_OTP_SECRETE_OF_USER"
     )
     
-
     session = requests.Session()
     #We need to set the sec-fetch-site header, otherwise we get redirected to the login page. 
     session.headers.update({
@@ -80,6 +84,12 @@ if __name__ == "__main__":
         login_url=LOGIN_URL, 
         loginCredentials=CREDENTIALS, 
         page="view-export")
+
+    if is_login_page(view_export_page.text):
+        print("❌ Login failed!")
+        sys.exit(1)
+
+    print(f"✅ Login successful.")
     
     download_url = find_export_download_url(
         input=view_export_page.text, 
